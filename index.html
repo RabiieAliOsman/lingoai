@@ -820,7 +820,14 @@ async function fetchNews(){
   area.innerHTML='<div class="empty-state"><span class="empty-icon" style="font-size:36px">⏳</span><div class="empty-txt">Haber hazırlanıyor...</div></div>';
   try{
     const today=new Date().toLocaleDateString('tr-TR');
-    const txt=await ai([{role:'user',content:`Today is ${today}. Create a realistic, believable news article about ${catNames[newsCat]} that could be from this week. Make it sound like a real news story with real-sounding details. Then create a ${L[newsLang].name} language lesson based on it.\n\nYou MUST reply with ONLY a raw JSON object. Start your response with { and end with }. No markdown, no backticks, no explanation before or after.\n\n{"headline":"headline in ${L[newsLang].name}","source":"Reuters","summary":"3-4 sentences in ${L[newsLang].name} — wrap exactly 4 key vocabulary words **like this**","vocabulary":[{"word":"word1","tr":"Turkish meaning"},{"word":"word2","tr":"Turkish meaning"},{"word":"word3","tr":"Turkish meaning"},{"word":"word4","tr":"Turkish meaning"}],"quiz_q":"comprehension question in ${L[newsLang].name}","quiz_opts":["correct answer","wrong1","wrong2","wrong3"],"difficulty":"B1"}`}],900);
+    const txt=await ai([
+      {role:'user',content:`Respond with ONLY a JSON object, nothing else. No greetings, no explanations, no markdown. Just the raw JSON starting with { and ending with }.
+
+Create a news language lesson in ${L[newsLang].name} about ${catNames[newsCat]}.
+
+JSON format:
+{"headline":"news headline in ${L[newsLang].name}","source":"Reuters","summary":"3-4 sentences in ${L[newsLang].name} with 4 words wrapped **like this**","vocabulary":[{"word":"w1","tr":"Turkish"},{"word":"w2","tr":"Turkish"},{"word":"w3","tr":"Turkish"},{"word":"w4","tr":"Turkish"}],"quiz_q":"question in ${L[newsLang].name}","quiz_opts":["correct","wrong1","wrong2","wrong3"],"difficulty":"B1"}`}
+    ],800);
     const start=txt.indexOf('{');
     const end=txt.lastIndexOf('}')+1;
     const clean=txt.slice(start,end);
