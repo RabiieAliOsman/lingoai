@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LingoAI Pro — AI Destekli Dil Öğrenme Platformu</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#fafbff;--white:#ffffff;--surface:#f0f4ff;--border:#e2e8f8;
+  --accent:#5865f2;--accent-dark:#4752c4;--accent-light:#eef0ff;
+  --green:#22c55e;--green-light:#f0fdf4;--green-border:#bbf7d0;
+  --red:#ef4444;--red-light:#fef2f2;--red-border:#fecaca;
+  --amber:#f59e0b;--amber-light:#fffbeb;--amber-border:#fde68a;
+  --purple:#8b5cf6;--pink:#ec4899;--teal:#14b8a6;--orange:#f97316;
+  --text:#1e2a4a;--text2:#64748b;--text3:#94a3b8;
+  --shadow:0 4px 20px rgba(88,101,242,.12);
+  --shadow-sm:0 2px 8px rgba(88,101,242,.08);
+  --radius:20px;--radius-sm:12px;--radius-xs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── ONBOARDING ── */
+.onboard{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+.ob-card{background:#fff;border-radius:28px;padding:40px 36px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.2)}
+.ob-logo{text-align:center;margin-bottom:24px}
+.ob-logo-icon{font-size:56px;display:block;margin-bottom:8px}
+.ob-logo-title{font-size:32px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ob-logo-sub{font-size:14px;color:var(--text2);font-weight:600;margin-top:2px}
+.ob-step{display:none}
+.ob-step.active{display:block}
+.ob-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px}
+.ob-sub{font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.5}
+.ob-input{width:100%;border:2.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);outline:none;transition:border-color .2s;margin-bottom:6px}
+.ob-input:focus{border-color:var(--accent)}
+.ob-hint{font-size:12px;color:var(--text3);margin-bottom:18px;line-height:1.5}
+.ob-hint a{color:var(--accent);text-decoration:none;font-weight:700}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.lang-opt{border:2.5px solid var(--border);border-radius:var(--radius-sm);padding:16px 8px;cursor:pointer;transition:all .15s;background:#fff;text-align:center}
+.lang-opt:hover{border-color:var(--accent);background:var(--accent-light)}
+.lang-opt.sel{border-color:var(--accent);background:var(--accent-light);transform:scale(1.03)}
+.lang-opt .lf{font-size:32px;display:block;margin-bottom:6px}
+.lang-opt .ln{font-size:13px;font-weight:800;color:var(--text)}
+.level-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.level-opt{border:2.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px}
+.level-opt:hover{border-color:var(--accent);background:var(--accent-light)}
+.level-opt.sel{border-color:var(--accent);background:var(--accent-light)}
+.level-opt .lv-badge{font-size:12px;font-weight:800;padding:3px 10px;border-radius:99px;background:var(--accent);color:#fff;flex-shrink:0}
+.level-opt .lv-desc{font-size:13px;color:var(--text2)}
+.ob-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;letter-spacing:.3px}
+.ob-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(88,101,242,.35)}
+.ob-btn:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
+.ob-dots{display:flex;justify-content:center;gap:6px;margin-bottom:20px}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .2s}
+.ob-dot.active{background:var(--accent);width:24px;border-radius:4px}
+.ob-dot.done{background:var(--green)}
+
+/* ── APP ── */
+.app{display:none;min-height:100vh;flex-direction:column}
+.app.show{display:flex}
+
+/* TOPBAR */
+.topbar{background:#fff;border-bottom:2px solid var(--border);height:64px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.tb-left{display:flex;align-items:center;gap:12px}
+.tb-logo{font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.tb-lang-badge{background:var(--accent-light);border:2px solid var(--accent);border-radius:99px;padding:3px 12px;font-size:12px;font-weight:800;color:var(--accent)}
+.tb-stats{display:flex;gap:8px}
+.tb-stat{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:13px;font-weight:800;border:2px solid}
+.tb-stat.fire{background:#fff7ed;border-color:#fed7aa;color:#ea580c}
+.tb-stat.xp{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a}
+.tb-stat.streak{background:#fdf4ff;border-color:#e9d5ff;color:#7c3aed}
+
+/* BOTTOM NAV */
+.bnav{background:#fff;border-top:2px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);position:sticky;bottom:0;z-index:200;box-shadow:0 -4px 12px rgba(0,0,0,.05)}
+.bnav-item{display:flex;flex-direction:column;align-items:center;padding:8px 4px;cursor:pointer;color:var(--text3);font-size:9px;font-weight:700;gap:3px;border:none;background:transparent;font-family:'Nunito',sans-serif;transition:all .15s;position:relative}
+.bnav-item:hover,.bnav-item.active{color:var(--accent)}
+.bnav-item.active::after{content:'';position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--accent);border-radius:99px}
+.bnav-icon{font-size:22px}
+
+/* CONTENT */
+.content{flex:1;padding:16px;max-width:680px;margin:0 auto;width:100%}
+.page{display:none;flex-direction:column;gap:16px}
+.page.active{display:flex}
+
+/* SECTION HEADER */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.section-title{font-size:18px;font-weight:900;color:var(--text)}
+.section-sub{font-size:13px;color:var(--text2)}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);border:2px solid var(--border)}
+
+/* XP POPUP */
+.xp-pop{position:fixed;top:72px;right:16px;background:linear-gradient(135deg,var(--green),#16a34a);color:#fff;border-radius:99px;padding:8px 20px;font-size:14px;font-weight:800;z-index:999;opacity:0;transform:translateY(-12px);transition:all .3s;pointer-events:none;box-shadow:0 4px 16px rgba(34,197,94,.4)}
+.xp-pop.show{opacity:1;transform:translateY(0)}
+
+/* ── HOME PAGE ── */
+.greeting-card{background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:var(--radius);padding:24px;color:#fff;position:relative;overflow:hidden}
+.greeting-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.1)}
+.greeting-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08)}
+.greeting-name{font-size:22px;font-weight:900;margin-bottom:4px}
+.greeting-sub{font-size:14px;opacity:.85;margin-bottom:16px}
+.greeting-prog{background:rgba(255,255,255,.2);border-radius:99px;height:10px;overflow:hidden;margin-bottom:6px}
+.greeting-prog-bar{height:100%;background:#fff;border-radius:99px;transition:width .6s}
+.greeting-prog-label{font-size:12px;opacity:.8}
+
+.quick-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qs-box{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center}
+.qs-num{font-size:26px;font-weight:900;color:var(--accent)}
+.qs-lbl{font-size:11px;color:var(--text2);font-weight:700;margin-top:2px}
+
+.daily-goal{background:linear-gradient(135deg,#fff7ed,#fffbeb);border:2px solid #fed7aa;border-radius:var(--radius-sm);padding:16px;display:flex;align-items:center;justify-content:space-between}
+.dg-left{display:flex;align-items:center;gap:10px}
+.dg-icon{font-size:28px}
+.dg-title{font-size:14px;font-weight:800;color:var(--text)}
+.dg-sub{font-size:12px;color:var(--text2)}
+.dg-start{padding:8px 20px;background:var(--orange);color:#fff;border:none;border-radius:99px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s}
+.dg-start:hover{background:#ea580c;transform:scale(1.05)}
+
+/* ── LESSON ── */
+.lesson-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.lesson-close{width:32px;height:32px;background:var(--surface);border:2px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .15s}
+.lesson-close:hover{background:var(--red-light);border-color:var(--red)}
+.prog-wrap{background:var(--border);border-radius:99px;height:12px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),#16a34a);transition:width .4s}
+.hearts{display:flex;gap:4px}
+.heart{font-size:18px;transition:all .3s}
+.heart.lost{filter:grayscale(1);opacity:.4}
+
+.word-card{background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:var(--radius);padding:28px 20px;text-align:center;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.word-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08)}
+.wc-emoji{font-size:58px;display:block;margin-bottom:10px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))}
+.wc-word{font-size:36px;font-weight:900;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,.2)}
+.wc-phonetic{font-size:14px;opacity:.75;margin-bottom:10px;font-weight:600}
+.wc-tr{font-size:16px;font-weight:700;background:rgba(255,255,255,.2);border-radius:10px;padding:7px 20px;display:inline-block;backdrop-filter:blur(10px)}
+.wc-ex{font-size:13px;opacity:.8;margin-top:10px;font-style:italic;line-height:1.5}
+
+.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans-btn{padding:16px 12px;border:2.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:var(--text);font-family:'Nunito',sans-serif;transition:all .15s;text-align:left;line-height:1.3}
+.ans-btn:hover:not(:disabled){border-color:var(--accent);background:var(--accent-light);transform:translateY(-1px)}
+.ans-btn.correct{border-color:var(--green)!important;background:var(--green-light)!important;color:var(--green)!important}
+.ans-btn.wrong{border-color:var(--red)!important;background:var(--red-light)!important;color:var(--red)!important}
+.ans-btn.show-correct{border-color:var(--green)!important;background:var(--green-light)!important;color:var(--green)!important}
+
+.feedback-bar{border-radius:var(--radius-sm);padding:14px 18px;font-size:14px;font-weight:800;display:none;align-items:center;gap:10px}
+.feedback-bar.show{display:flex}
+.feedback-bar.good{background:var(--green-light);color:var(--green);border:2.5px solid var(--green-border)}
+.feedback-bar.bad{background:var(--red-light);color:var(--red);border:2.5px solid var(--red-border)}
+.fb-icon{font-size:22px}
+
+.cont-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),#16a34a);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;display:none;transition:all .2s;box-shadow:0 4px 16px rgba(34,197,94,.3)}
+.cont-btn.show{display:block}
+.cont-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(34,197,94,.4)}
+
+/* ── CHAT ── */
+.chat-lang-sel{display:flex;gap:8px;margin-bottom:10px}
+.cls-btn{flex:1;padding:8px;border:2.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:800;cursor:pointer;background:#fff;font-family:'Nunito',sans-serif;transition:all .15s;text-align:center}
+.cls-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.scenario-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.sc-tab{padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;font-family:'Nunito',sans-serif;transition:all .15s}
+.sc-tab.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.chat-box{background:var(--surface);border-radius:var(--radius-sm);padding:12px;max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:10px}
+.chat-box::-webkit-scrollbar{width:3px}
+.chat-box::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:18px;font-size:14px;line-height:1.6;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.ai{background:#fff;border:2px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg.user{background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.correction{background:var(--amber-light);border:2px solid var(--amber-border);color:#92400e;font-size:12px;align-self:flex-start;border-radius:var(--radius-xs)}
+.chat-msg.ai-loading{background:#fff;border:2px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;padding:14px 18px}
+.chat-input-row{display:flex;gap:8px}
+.chat-input{flex:1;border:2.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 16px;font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);outline:none;transition:border-color .2s;background:#fff}
+.chat-input:focus{border-color:var(--accent)}
+.chat-send{width:46px;height:46px;background:linear-gradient(135deg,var(--accent),var(--purple));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.chat-send:hover{transform:scale(1.05)}
+.ai-feedback-badge{display:inline-flex;align-items:center;gap:4px;background:var(--amber-light);border:1.5px solid var(--amber-border);color:#92400e;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;margin-top:6px}
+
+/* ── NEWS ── */
+.news-lang-sel{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.nls-btn{padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;font-family:'Nunito',sans-serif;transition:all .15s}
+.nls-btn.active{border-color:var(--teal);background:#f0fdfa;color:var(--teal)}
+.news-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.ncat{padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:#fff;font-family:'Nunito',sans-serif;transition:all .15s}
+.ncat.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.news-fetch-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--teal),#0d9488);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
+.news-fetch-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(20,184,166,.3)}
+.news-fetch-btn:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none;box-shadow:none}
+.news-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.news-card-hdr{padding:14px 16px;border-bottom:2px solid var(--border)}
+.news-source{font-size:11px;font-weight:800;color:var(--teal);background:#f0fdfa;padding:2px 10px;border-radius:99px;display:inline-block;margin-bottom:6px}
+.news-headline{font-size:15px;font-weight:800;color:var(--text);line-height:1.4}
+.news-body{padding:16px}
+.news-summary{font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:14px}
+.news-kw{background:var(--amber-light);color:#92400e;border-radius:4px;padding:1px 5px;font-weight:700;font-size:13px;border-bottom:2px solid var(--amber-border);cursor:pointer}
+.vocab-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.vocab-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px}
+.vc-word{font-size:14px;font-weight:800;color:var(--text)}
+.vc-tr{font-size:11px;color:var(--text3);margin-top:2px}
+.news-quiz{background:var(--accent-light);border:2px solid #c7d2fe;border-radius:var(--radius-sm);padding:14px}
+.nq-q{font-size:13px;font-weight:800;color:var(--accent-dark);margin-bottom:10px}
+.nq-opts{display:flex;flex-direction:column;gap:6px}
+.nq-opt{padding:9px 14px;border:2px solid #c7d2fe;border-radius:var(--radius-xs);font-size:13px;font-weight:700;cursor:pointer;background:#fff;color:var(--text);font-family:'Nunito',sans-serif;transition:all .15s;text-align:left}
+.nq-opt:hover:not(:disabled){border-color:var(--accent);background:#fff}
+.nq-opt.correct{border-color:var(--green)!important;background:var(--green-light)!important;color:var(--green)!important}
+.nq-opt.wrong{border-color:var(--red)!important;background:var(--red-light)!important;color:var(--red)!important}
+
+/* ── LEVEL TEST ── */
+.level-test-card{background:linear-gradient(135deg,var(--purple),#6d28d9);border-radius:var(--radius);padding:24px;color:#fff;text-align:center}
+.lt-icon{font-size:52px;margin-bottom:10px;display:block}
+.lt-title{font-size:22px;font-weight:900;margin-bottom:6px}
+.lt-sub{font-size:14px;opacity:.85;margin-bottom:16px;line-height:1.5}
+.lt-start{padding:12px 32px;background:#fff;color:var(--purple);border:none;border-radius:99px;font-size:15px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s}
+.lt-start:hover{transform:scale(1.05);box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.lt-question{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);padding:20px}
+.lt-q-text{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;line-height:1.5}
+.lt-q-num{font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.lt-opts{display:flex;flex-direction:column;gap:8px}
+.lt-opt{padding:12px 16px;border:2.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;background:#fff;color:var(--text);font-family:'Nunito',sans-serif;transition:all .15s;text-align:left}
+.lt-opt:hover{border-color:var(--purple);background:#faf5ff}
+.lt-opt.sel{border-color:var(--purple);background:#faf5ff}
+.lt-opt.correct{border-color:var(--green)!important;background:var(--green-light)!important;color:var(--green)!important}
+.lt-opt.wrong{border-color:var(--red)!important;background:var(--red-light)!important;color:var(--red)!important}
+.lt-result{background:linear-gradient(135deg,var(--purple),#6d28d9);border-radius:var(--radius);padding:28px;color:#fff;text-align:center}
+.lt-result-level{font-size:48px;font-weight:900;margin-bottom:8px}
+.lt-result-title{font-size:20px;font-weight:800;margin-bottom:6px}
+.lt-result-sub{font-size:14px;opacity:.85;line-height:1.5}
+
+/* ── PROGRESS ── */
+.level-hero{background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:var(--radius);padding:24px;color:#fff}
+.lh-level{font-size:36px;font-weight:900;margin-bottom:4px}
+.lh-sub{font-size:14px;opacity:.85;margin-bottom:14px}
+.lh-prog{background:rgba(255,255,255,.25);border-radius:99px;height:12px;overflow:hidden;margin-bottom:6px}
+.lh-prog-fill{height:100%;border-radius:99px;background:#fff;transition:width .6s}
+.lh-prog-labels{display:flex;justify-content:space-between;font-size:12px;opacity:.8}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sg-box{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.sg-num{font-size:28px;font-weight:900;color:var(--accent)}
+.sg-lbl{font-size:12px;color:var(--text2);font-weight:700;margin-top:2px}
+.badges-row{display:flex;gap:10px;flex-wrap:wrap}
+.badge-item{background:#fff;border:2px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;width:80px;opacity:.4;transition:all .2s}
+.badge-item.earned{opacity:1;border-color:var(--amber);background:var(--amber-light)}
+.badge-icon{font-size:28px;display:block;margin-bottom:4px}
+.badge-name{font-size:10px;font-weight:700;color:var(--text2)}
+.ai-insight-box{background:var(--accent-light);border:2px solid #c7d2fe;border-radius:var(--radius-sm);padding:16px}
+.aib-hdr{font-size:11px;font-weight:800;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.aib-txt{font-size:14px;color:var(--text2);line-height:1.7}
+.action-btn{width:100%;padding:12px;border-radius:var(--radius-sm);font-size:14px;font-weight:800;cursor:pointer;border:2px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Nunito',sans-serif;transition:all .15s;margin-top:8px}
+.action-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* LOADING */
+.loading{display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:bounce 1.3s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spin-icon{animation:spin 1s linear infinite;display:inline-block}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:32px 16px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:10px;display:block;opacity:.5}
+.empty-txt{font-size:14px;font-weight:600;line-height:1.5}
+
+@media(max-width:480px){
+  .answer-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .quick-stats{grid-template-columns:1fr 1fr 1fr}
+  .lang-grid{grid-template-columns:1fr 1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="xp-pop" id="xpPop">+10 XP 🎉</div>
+
+<!-- ── ONBOARDING ── -->
+<div class="onboard" id="onboard">
+<div class="ob-card">
+  <div class="ob-logo">
+    <span class="ob-logo-icon">🌍</span>
+    <div class="ob-logo-title">LingoAI Pro</div>
+    <div class="ob-logo-sub">AI Destekli Dil Öğrenme Platformu</div>
+  </div>
+
+  <div class="ob-dots">
+    <div class="ob-dot active" id="od1"></div>
+    <div class="ob-dot" id="od2"></div>
+    <div class="ob-dot" id="od3"></div>
+  </div>
+
+  <!-- Step 1: API Key -->
+  <div class="ob-step active" id="ob-s1">
+    <div class="ob-title">🔑 API Anahtarı</div>
+    <div class="ob-sub">Anthropic API anahtarınla AI özelliklerini etkinleştir</div>
+    <input class="ob-input" type="password" id="apiInput" placeholder="sk-ant-api03-..."/>
+    <div class="ob-hint">
+      Ücretsiz anahtar: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key<br>
+      <strong>Güvenli:</strong> Anahtarın sadece tarayıcında saklanır, hiçbir sunucuya gönderilmez.
+    </div>
+    <button class="ob-btn" onclick="ob_next(1)">Devam Et →</button>
+  </div>
+
+  <!-- Step 2: Language -->
+  <div class="ob-step" id="ob-s2">
+    <div class="ob-title">🌐 Hangi dili öğrenmek istiyorsun?</div>
+    <div class="ob-sub">İstediğin zaman değiştirebilirsin</div>
+    <div class="lang-grid">
+      <div class="lang-opt sel" data-l="en" onclick="selLang(this)">
+        <span class="lf">🇬🇧</span><div class="ln">İngilizce</div>
+      </div>
+      <div class="lang-opt" data-l="de" onclick="selLang(this)">
+        <span class="lf">🇩🇪</span><div class="ln">Almanca</div>
+      </div>
+      <div class="lang-opt" data-l="zh" onclick="selLang(this)">
+        <span class="lf">🇨🇳</span><div class="ln">Çince</div>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="ob_next(2)">Devam Et →</button>
+  </div>
+
+  <!-- Step 3: Level -->
+  <div class="ob-step" id="ob-s3">
+    <div class="ob-title">📊 Seviyeni seç</div>
+    <div class="ob-sub">Sana uygun içerik hazırlayalım</div>
+    <div class="level-opts">
+      <div class="level-opt sel" data-lv="beginner" onclick="selLevel(this)">
+        <span class="lv-badge">A1</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">Başlangıç</div>
+          <div class="lv-desc">Hiç bilmiyorum veya çok az biliyorum</div>
+        </div>
+      </div>
+      <div class="level-opt" data-lv="elementary" onclick="selLevel(this)">
+        <span class="lv-badge" style="background:var(--green)">A2</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">Temel</div>
+          <div class="lv-desc">Temel kelimeler ve cümleleri biliyorum</div>
+        </div>
+      </div>
+      <div class="level-opt" data-lv="intermediate" onclick="selLevel(this)">
+        <span class="lv-badge" style="background:var(--orange)">B1</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">Orta</div>
+          <div class="lv-desc">Günlük konuşmalar yapabiliyorum</div>
+        </div>
+      </div>
+      <div class="level-opt" data-lv="upperint" onclick="selLevel(this)">
+        <span class="lv-badge" style="background:var(--purple)">B2</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">İleri Orta</div>
+          <div class="lv-desc">Akıcı konuşabiliyor, okuya biliyorum</div>
+        </div>
+      </div>
+    </div>
+    <button class="ob-btn" onclick="startApp()">🚀 Öğrenmeye Başla!</button>
+  </div>
+</div>
+</div>
+
+<!-- ── APP ── -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="tb-left">
+      <div class="tb-logo">LingoAI</div>
+      <div class="tb-lang-badge" id="tbLangBadge">🇬🇧 EN</div>
+    </div>
+    <div class="tb-stats">
+      <div class="tb-stat fire">🔥 <span id="tbStreak">1</span></div>
+      <div class="tb-stat xp">⭐ <span id="tbXP">0</span></div>
+      <div class="tb-stat streak">💎 <span id="tbLevel">A1</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HOME -->
+    <div class="page active" id="pg-home">
+      <div class="greeting-card">
+        <div class="greeting-name" id="greetName">Hoş geldin! 👋</div>
+        <div class="greeting-sub" id="greetSub">Bugünkü hedefe ulaşmaya hazır mısın?</div>
+        <div class="greeting-prog">
+          <div class="greeting-prog-bar" id="greetProgBar" style="width:0%"></div>
+        </div>
+        <div class="greeting-prog-label" id="greetProgLabel">0 / 10 ders tamamlandı</div>
+      </div>
+
+      <div class="quick-stats">
+        <div class="qs-box"><div class="qs-num" id="qsWords">0</div><div class="qs-lbl">Kelime 📖</div></div>
+        <div class="qs-box"><div class="qs-num" id="qsXP">0</div><div class="qs-lbl">Toplam XP ⭐</div></div>
+        <div class="qs-box"><div class="qs-num" id="qsAcc">—</div><div class="qs-lbl">Doğruluk 🎯</div></div>
+      </div>
+
+      <div class="daily-goal">
+        <div class="dg-left">
+          <div class="dg-icon">🎯</div>
+          <div>
+            <div class="dg-title">Günlük Hedef</div>
+            <div class="dg-sub">10 kelime öğren, 10 XP kazan</div>
+          </div>
+        </div>
+        <button class="dg-start" onclick="goLesson()">Başla!</button>
+      </div>
+
+      <div class="card">
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">🏆 Rozetlerin</div>
+        <div class="badges-row" id="badgesRow">
+          <div class="badge-item" id="b-first"><span class="badge-icon">🌱</span><span class="badge-name">İlk Adım</span></div>
+          <div class="badge-item" id="b-10words"><span class="badge-icon">📖</span><span class="badge-name">10 Kelime</span></div>
+          <div class="badge-item" id="b-streak3"><span class="badge-icon">🔥</span><span class="badge-name">3 Gün Seri</span></div>
+          <div class="badge-item" id="b-100xp"><span class="badge-icon">⭐</span><span class="badge-name">100 XP</span></div>
+          <div class="badge-item" id="b-perfect"><span class="badge-icon">💯</span><span class="badge-name">Mükemmel</span></div>
+          <div class="badge-item" id="b-chat"><span class="badge-icon">💬</span><span class="badge-name">Sohbetçi</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LESSON -->
+    <div class="page" id="pg-lesson">
+      <div class="lesson-header">
+        <button class="lesson-close" onclick="goHome()">✕</button>
+        <div class="prog-wrap" style="flex:1;margin:0 12px">
+          <div class="prog-fill" id="lessonProg" style="width:10%"></div>
+        </div>
+        <div class="hearts" id="hearts">
+          <span class="heart">❤️</span>
+          <span class="heart">❤️</span>
+          <span class="heart">❤️</span>
+        </div>
+      </div>
+
+      <div class="lang-bar" style="display:flex;gap:8px">
+        <button class="cls-btn active" data-l="en" onclick="changeLessonLang('en',this)">🇬🇧 İngilizce</button>
+        <button class="cls-btn" data-l="de" onclick="changeLessonLang('de',this)">🇩🇪 Almanca</button>
+        <button class="cls-btn" data-l="zh" onclick="changeLessonLang('zh',this)">🇨🇳 Çince</button>
+      </div>
+
+      <div class="word-card">
+        <span class="wc-emoji" id="wcEmoji">⏳</span>
+        <div class="wc-word" id="wcWord">...</div>
+        <div class="wc-phonetic" id="wcPhonetic"></div>
+        <div class="wc-tr" id="wcTr">...</div>
+        <div class="wc-ex" id="wcEx"></div>
+      </div>
+
+      <div class="card" style="padding:16px">
+        <div style="font-size:12px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">✏️ Doğru Türkçe çeviriyi seç</div>
+        <div class="answer-grid" id="answerGrid"></div>
+        <div class="feedback-bar" id="feedbackBar">
+          <span class="fb-icon" id="fbIcon">🎉</span>
+          <span id="fbText">Doğru!</span>
+        </div>
+      </div>
+
+      <button class="cont-btn" id="contBtn" onclick="nextLesson()">Devam Et →</button>
+    </div>
+
+    <!-- CHAT -->
+    <div class="page" id="pg-chat">
+      <div class="card">
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px">💬 AI Konuşma Koçu</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">AI seni gerçek zamanlı düzeltir ve yönlendirir</div>
+
+        <div class="chat-lang-sel">
+          <button class="cls-btn active" data-l="en" onclick="chatChangeLang('en',this)">🇬🇧 İngilizce</button>
+          <button class="cls-btn" data-l="de" onclick="chatChangeLang('de',this)">🇩🇪 Almanca</button>
+          <button class="cls-btn" data-l="zh" onclick="chatChangeLang('zh',this)">🇨🇳 Çince</button>
+        </div>
+
+        <div class="scenario-tabs">
+          <button class="sc-tab active" onclick="loadScenario('cafe',this)">☕ Kafede</button>
+          <button class="sc-tab" onclick="loadScenario('work',this)">💼 İş toplantısı</button>
+          <button class="sc-tab" onclick="loadScenario('hotel',this)">🏨 Otelde</button>
+          <button class="sc-tab" onclick="loadScenario('doctor',this)">🏥 Doktorda</button>
+          <button class="sc-tab" onclick="loadScenario('free',this)">🗣️ Serbest</button>
+        </div>
+
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" placeholder="Hedef dilde yaz... (Enter = gönder)" onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+
+      <div class="card" style="padding:14px;background:var(--accent-light);border-color:#c7d2fe">
+        <div style="font-size:11px;font-weight:800;color:var(--accent);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">💡 İpucu</div>
+        <div style="font-size:13px;color:var(--accent-dark);line-height:1.5" id="chatTip">Hata yapmaktan korkma! AI her hatanı nazikçe düzeltiyor. Önemli olan denemek.</div>
+      </div>
+    </div>
+
+    <!-- NEWS -->
+    <div class="page" id="pg-news">
+      <div class="card">
+        <div style="font-size:16px;font-weight:800;margin-bottom:4px">📰 Haberlerle Dil Öğren</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Güncel haberlerle kelime hazineni genişlet</div>
+
+        <div class="news-lang-sel">
+          <button class="nls-btn active" data-l="en" onclick="newsChangeLang('en',this)">🇬🇧 İngilizce</button>
+          <button class="nls-btn" data-l="de" onclick="newsChangeLang('de',this)">🇩🇪 Almanca</button>
+          <button class="nls-btn" data-l="zh" onclick="newsChangeLang('zh',this)">🇨🇳 Çince</button>
+        </div>
+
+        <div class="news-cats">
+          <div class="ncat active" onclick="selNewsCat('business',this)">💼 İş</div>
+          <div class="ncat" onclick="selNewsCat('tech',this)">💻 Teknoloji</div>
+          <div class="ncat" onclick="selNewsCat('world',this)">🌍 Dünya</div>
+          <div class="ncat" onclick="selNewsCat('science',this)">🔬 Bilim</div>
+          <div class="ncat" onclick="selNewsCat('sports',this)">⚽ Spor</div>
+        </div>
+
+        <button class="news-fetch-btn" id="newsFetchBtn" onclick="fetchNews()">
+          <span id="newsBtnTxt">📰 Güncel Haber Getir</span>
+        </button>
+
+        <div id="newsArea">
+          <div class="empty-state">
+            <span class="empty-icon">📰</span>
+            <div class="empty-txt">Kategori seç ve "Güncel Haber Getir" butonuna bas.<br>AI sana dil dersi oluşturacak!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="page" id="pg-progress">
+      <div class="level-hero">
+        <div class="lh-level" id="lhLevel">A1</div>
+        <div class="lh-sub" id="lhSub">Başlangıç — Harika bir başlangıç!</div>
+        <div class="lh-prog"><div class="lh-prog-fill" id="lhProgFill" style="width:0%"></div></div>
+        <div class="lh-prog-labels"><span id="lhXPCur">0 XP</span><span id="lhXPNext">100 XP → A2</span></div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="sg-box"><div class="sg-num" id="sgWords">0</div><div class="sg-lbl">Öğrenilen Kelime 📖</div></div>
+        <div class="sg-box"><div class="sg-num" id="sgStreak">1</div><div class="sg-lbl">Günlük Seri 🔥</div></div>
+        <div class="sg-box"><div class="sg-num" id="sgXP">0</div><div class="sg-lbl">Toplam XP ⭐</div></div>
+        <div class="sg-box"><div class="sg-num" id="sgAcc">—</div><div class="sg-lbl">Doğruluk 🎯</div></div>
+      </div>
+
+      <!-- Level Test -->
+      <div id="levelTestArea">
+        <div class="level-test-card">
+          <span class="lt-icon">🎓</span>
+          <div class="lt-title">Seviye Testi</div>
+          <div class="lt-sub">10 soruluk test ile gerçek seviyeni ölç. AI seni A1'den B2'ye kadar değerlendirecek.</div>
+          <button class="lt-start" onclick="startLevelTest()">Testi Başlat →</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ai-insight-box">
+          <div class="aib-hdr">🤖 AI Koçundan Haftalık Rapor</div>
+          <div class="aib-txt" id="aiReport">Rapor yükleniyor...</div>
+        </div>
+        <button class="action-btn" onclick="loadAIReport()">🔄 Raporu Yenile</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bnav">
+    <button class="bnav-item active" onclick="showPage('home',this)"><span class="bnav-icon">🏠</span>Ana Sayfa</button>
+    <button class="bnav-item" onclick="showPage('lesson',this)"><span class="bnav-icon">📚</span>Kelimeler</button>
+    <button class="bnav-item" onclick="showPage('chat',this)"><span class="bnav-icon">💬</span>Sohbet</button>
+    <button class="bnav-item" onclick="showPage('news',this)"><span class="bnav-icon">📰</span>Haberler</button>
+    <button class="bnav-item" onclick="showPage('progress',this)"><span class="bnav-icon">📊</span>İlerleme</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let KEY='', lang='en', userLevel='beginner';
+let xp=0, streak=1, words=0, correct=0, total=0;
+let lessonIdx=0, answered=false, hearts=3, lessonsToday=0;
+let chatHistory=[], chatLang='en', newsLang='en', newsCat='business';
+let ltAnswers=[], ltCurrent=0, ltScore=0;
+
+const L={
+  en:{name:'İngilizce',flag:'🇬🇧',native:'English',badge:'🇬🇧 EN'},
+  de:{name:'Almanca',flag:'🇩🇪',native:'Deutsch',badge:'🇩🇪 DE'},
+  zh:{name:'Çince',flag:'🇨🇳',native:'Chinese (Mandarin)',badge:'🇨🇳 ZH'}
+};
+
+const WORDS={
+  en:[
+    {w:'Hello',p:'[hɛˈloʊ]',tr:'Merhaba',e:'Hello, how are you?',em:'👋',opts:['Merhaba','Hoşçakal','Teşekkürler','Özür dilerim'],c:0},
+    {w:'Thank you',p:'[θæŋk juː]',tr:'Teşekkür ederim',e:'Thank you very much!',em:'🙏',opts:['Lütfen','Evet','Teşekkür ederim','Hayır'],c:2},
+    {w:'Good morning',p:'[ɡʊd ˈmɔːrnɪŋ]',tr:'Günaydın',e:'Good morning, everyone!',em:'🌅',opts:['İyi geceler','Günaydın','İyi akşamlar','Hoş geldiniz'],c:1},
+    {w:'Please',p:'[pliːz]',tr:'Lütfen',e:'Please help me.',em:'🙏',opts:['Lütfen','Tamam','Hayır','Belki'],c:0},
+    {w:'Water',p:'[ˈwɔːtər]',tr:'Su',e:'Can I have some water?',em:'💧',opts:['Süt','Kahve','Su','Çay'],c:2},
+    {w:'Happy',p:'[ˈhæpi]',tr:'Mutlu',e:'I am very happy today!',em:'😊',opts:['Üzgün','Kızgın','Mutlu','Şaşkın'],c:2},
+    {w:'Work',p:'[wɜːrk]',tr:'İş / Çalışmak',e:'I work every day.',em:'💼',opts:['Uyku','İş / Çalışmak','Oyun','Tatil'],c:1},
+    {w:'Beautiful',p:'[ˈbjuːtɪfəl]',tr:'Güzel',e:'What a beautiful day!',em:'✨',opts:['Güzel','Çirkin','Küçük','Büyük'],c:0},
+    {w:'Friend',p:'[frɛnd]',tr:'Arkadaş',e:'She is my best friend.',em:'👫',opts:['Aile','Komşu','Arkadaş','Öğretmen'],c:2},
+    {w:'Time',p:'[taɪm]',tr:'Zaman',e:'Time flies when you have fun.',em:'⏰',opts:['Para','Yer','Zaman','Hız'],c:2},
+  ],
+  de:[
+    {w:'Hallo',p:'[haˈloː]',tr:'Merhaba',e:'Hallo, wie geht es Ihnen?',em:'👋',opts:['Merhaba','Hoşçakal','Teşekkürler','İyi geceler'],c:0},
+    {w:'Danke',p:'[ˈdaŋkə]',tr:'Teşekkür ederim',e:'Danke für Ihre Hilfe!',em:'🙏',opts:['Lütfen','Evet','Teşekkür ederim','Hayır'],c:2},
+    {w:'Bitte',p:'[ˈbɪtə]',tr:'Lütfen / Rica ederim',e:'Bitte helfen Sie mir.',em:'🤲',opts:['Merhaba','Lütfen / Rica ederim','Hoşçakal','Üzgünüm'],c:1},
+    {w:'Wasser',p:'[ˈvasər]',tr:'Su',e:'Ich möchte Wasser, bitte.',em:'💧',opts:['Süt','Kahve','Çay','Su'],c:3},
+    {w:'Schön',p:'[ʃøːn]',tr:'Güzel',e:'Das ist sehr schön!',em:'✨',opts:['Çirkin','Küçük','Büyük','Güzel'],c:3},
+    {w:'Arbeit',p:'[ˈaʁbaɪt]',tr:'İş',e:'Die Arbeit macht Spaß.',em:'💼',opts:['Tatil','Ev','İş','Okul'],c:2},
+    {w:'Freund',p:'[fʁɔʏnt]',tr:'Arkadaş',e:'Er ist mein bester Freund.',em:'👫',opts:['Aile','Komşu','Arkadaş','Öğretmen'],c:2},
+    {w:'Zeit',p:'[tsaɪt]',tr:'Zaman',e:'Die Zeit vergeht schnell.',em:'⏰',opts:['Para','Zaman','Yer','Hız'],c:1},
+    {w:'Glücklich',p:'[ˈɡlʏklɪç]',tr:'Mutlu',e:'Ich bin sehr glücklich.',em:'😊',opts:['Üzgün','Mutlu','Kızgın','Şaşkın'],c:1},
+    {w:'Essen',p:'[ˈɛsən]',tr:'Yemek',e:'Das Essen schmeckt gut.',em:'🍽️',opts:['Yemek','İçmek','Uyumak','Gitmek'],c:0},
+  ],
+  zh:[
+    {w:'你好',p:'nǐ hǎo',tr:'Merhaba',e:'你好，你叫什么名字？',em:'👋',opts:['Merhaba','Hoşçakal','Teşekkürler','Günaydın'],c:0},
+    {w:'谢谢',p:'xiè xiè',tr:'Teşekkür ederim',e:'谢谢你的帮助！',em:'🙏',opts:['Özür dilerim','Lütfen','Teşekkür ederim','Evet'],c:2},
+    {w:'对不起',p:'duì bu qǐ',tr:'Özür dilerim',e:'对不起，我来晚了。',em:'😔',opts:['Teşekkürler','Merhaba','Evet','Özür dilerim'],c:3},
+    {w:'水',p:'shuǐ',tr:'Su',e:'我要一杯水，谢谢。',em:'💧',opts:['Su','Çay','Kahve','Süt'],c:0},
+    {w:'好',p:'hǎo',tr:'İyi / Güzel',e:'这个东西很好！',em:'👍',opts:['Kötü','Küçük','İyi / Güzel','Büyük'],c:2},
+    {w:'工作',p:'gōng zuò',tr:'İş / Çalışmak',e:'我每天工作。',em:'💼',opts:['Tatil','Uyku','Oyun','İş / Çalışmak'],c:3},
+    {w:'朋友',p:'péng yǒu',tr:'Arkadaş',e:'她是我最好的朋友。',em:'👫',opts:['Aile','Arkadaş','Öğretmen','Komşu'],c:1},
+    {w:'时间',p:'shí jiān',tr:'Zaman',e:'时间过得很快！',em:'⏰',opts:['Para','Yer','Zaman','Hız'],c:2},
+    {w:'漂亮',p:'piào liàng',tr:'Güzel',e:'她很漂亮！',em:'✨',opts:['Güzel','Çirkin','Küçük','Büyük'],c:0},
+    {w:'高兴',p:'gāo xìng',tr:'Mutlu / Sevinçli',e:'我很高兴认识你！',em:'😊',opts:['Üzgün','Mutlu / Sevinçli','Kızgın','Yorgun'],c:1},
+  ]
+};
+
+const SCENARIOS={
+  cafe:{tr:'☕ Kafede sipariş',sys:'You are a friendly cafe barista. The student will practice ordering in {L}. Keep sentences simple (A1-B1 level). After each student message, if there are grammar mistakes, add a correction note in parentheses like (Düzeltme: correct version). Start by warmly greeting the customer in {L}.'},
+  work:{tr:'💼 İş toplantısı',sys:'You are a colleague at a business meeting. Speak only {L}. Professional but simple language. After each student message, note grammar mistakes in parentheses (Düzeltme: ...). Welcome them to the meeting.'},
+  hotel:{tr:'🏨 Otelde check-in',sys:'You are a hotel receptionist. Speak only {L}. Simple polite sentences. After each student message, correct mistakes in parentheses (Düzeltme: ...). Start by greeting the guest.'},
+  doctor:{tr:'🏥 Doktor muayenesi',sys:'You are a friendly doctor. Patient speaks {L}. Simple sentences. After each student message, correct mistakes in parentheses (Düzeltme: ...). Start by asking how you can help.'},
+  free:{tr:'🗣️ Serbest sohbet',sys:'Have a friendly casual conversation with the student in {L}. Simple and natural. After each student message, note any grammar mistakes in parentheses (Düzeltme: ...). Start with an interesting question to get the conversation going.'}
+};
+
+// ── ONBOARDING ──
+let obStep=1;
+function ob_next(from){
+  if(from===1){
+    const k=document.getElementById('apiInput').value.trim();
+    if(!k.startsWith('sk-ant')){alert('Geçerli API anahtarı gir! "sk-ant-" ile başlamalı.');return;}
+    KEY=k;localStorage.setItem('lk',k);
+  }
+  document.getElementById('ob-s'+from).classList.remove('active');
+  obStep++;
+  document.getElementById('ob-s'+obStep).classList.add('active');
+  document.getElementById('od'+(from)).className='ob-dot done';
+  document.getElementById('od'+obStep).className='ob-dot active';
+}
+function selLang(el){document.querySelectorAll('.lang-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');lang=el.dataset.l;}
+function selLevel(el){document.querySelectorAll('.level-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');userLevel=el.dataset.lv;}
+
+function startApp(){
+  document.getElementById('onboard').style.display='none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('tbLangBadge').textContent=L[lang].badge;
+  loadStreak();updateHome();loadLesson();
+  loadScenario('cafe',document.querySelector('.sc-tab'));
+  loadAIReport();
+  earnBadge('b-first');
+}
+
+// ── NAVIGATION ──
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pg-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='progress'){updateProgress();}
+  if(id==='home'){updateHome();}
+}
+function goLesson(){showPage('lesson',document.querySelectorAll('.bnav-item')[1]);}
+function goHome(){showPage('home',document.querySelectorAll('.bnav-item')[0]);}
+
+// ── API ──
+async function ai(msgs,maxTok=700){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':KEY,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTok,messages:msgs})
+  });
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.content[0].text;
+}
+
+// ── LESSON ──
+let curLessonLang='en';
+function changeLessonLang(l,el){
+  curLessonLang=l;
+  document.querySelectorAll('.cls-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  lessonIdx=0;loadLesson();
+}
+
+function loadLesson(){
+  const bank=WORDS[curLessonLang];
+  const w=bank[lessonIdx%bank.length];
+  answered=false;
+  document.getElementById('wcEmoji').textContent=w.em;
+  document.getElementById('wcWord').textContent=w.w;
+  document.getElementById('wcPhonetic').textContent=w.p;
+  document.getElementById('wcTr').textContent=w.tr;
+  document.getElementById('wcEx').textContent='"'+w.e+'"';
+  document.getElementById('lessonProg').style.width=Math.min(((lessonIdx%10)/10)*100+10,100)+'%';
+  document.getElementById('feedbackBar').className='feedback-bar';
+  document.getElementById('contBtn').className='cont-btn';
+  const grid=document.getElementById('answerGrid');
+  grid.innerHTML='';
+  w.opts.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='ans-btn';b.textContent=opt;
+    b.onclick=()=>checkAns(i,w.c,w.opts,w.tr);
+    grid.appendChild(b);
+  });
+}
+
+function checkAns(chosen,correct,opts,correctTr){
+  if(answered)return;
+  answered=true;total++;
+  const btns=document.querySelectorAll('.ans-btn');
+  btns.forEach(b=>b.disabled=true);
+  btns[correct].classList.add('correct');
+  const fb=document.getElementById('feedbackBar');
+  if(chosen===correct){
+    fb.innerHTML='<span class="fb-icon">🎉</span><span>Harika! Doğru cevap!</span>';
+    fb.className='feedback-bar show good';
+    addXP(10);correct++;words++;lessonsToday++;
+    updateHomeProgress();checkBadges();
+  } else {
+    btns[chosen].classList.add('wrong');
+    fb.innerHTML='<span class="fb-icon">💔</span><span>Yanlış! Doğru: <strong>'+opts[correct]+'</strong></span>';
+    fb.className='feedback-bar show bad';
+    loseHeart();
+  }
+  document.getElementById('contBtn').className='cont-btn show';
+}
+
+function loseHeart(){
+  const hh=document.querySelectorAll('.heart');
+  hearts=Math.max(0,hearts-1);
+  if(hearts<hh.length)hh[hh.length-1-hearts].classList.add('lost');
+}
+
+function nextLesson(){
+  lessonIdx++;
+  if(hearts===0){
+    hearts=3;
+    document.querySelectorAll('.heart').forEach(h=>h.classList.remove('lost'));
+  }
+  loadLesson();
+}
+
+// ── CHAT ──
+function chatChangeLang(l,el){
+  chatLang=l;
+  document.querySelectorAll('.chat-lang-sel .cls-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  chatHistory=[];
+  const activeSc=document.querySelector('.sc-tab.active');
+  const key=activeSc?activeSc.getAttribute('onclick').match(/'(\w+)'/)[1]:'cafe';
+  loadScenario(key,activeSc);
+}
+
+function loadScenario(key,el){
+  chatHistory=[];
+  if(el){document.querySelectorAll('.sc-tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+  const sc=SCENARIOS[key];
+  const box=document.getElementById('chatBox');
+  box.innerHTML='';
+  const tip=document.getElementById('chatTip');
+  const tips={cafe:'Kahve siparişi verirken "I would like..." veya "Can I have..." kullan.',work:'"Could you please..." ile kibarca isteklerde bulun.',hotel:'"I have a reservation" ile başlayabilirsin.',doctor:'"I have a pain in..." ile şikayetini anlat.',free:'İstediğin konudan konuş! AI seni yönlendirecek.'};
+  tip.textContent=tips[key]||'Hata yapmaktan korkma, AI seni düzeltiyor!';
+  addChatMsg('ai-loading','<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
+  const sys=sc.sys.replace(/{L}/g,L[chatLang].native);
+  ai([{role:'user',content:sys+'\n\nStart now.'}],200).then(txt=>{
+    chatHistory=[{role:'user',content:sys+'\n\nStart now.'},{role:'assistant',content:txt}];
+    box.lastChild.className='chat-msg ai';
+    box.lastChild.textContent=txt;
+    box.scrollTop=box.scrollHeight;
+  }).catch(e=>{box.lastChild.innerHTML='⚠️ '+e.message;});
+}
+
+function addChatMsg(cls,html){
+  const box=document.getElementById('chatBox');
+  const d=document.createElement('div');
+  d.className='chat-msg '+cls;d.innerHTML=html;
+  box.appendChild(d);box.scrollTop=box.scrollHeight;
+  return d;
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chatInput');
+  const txt=inp.value.trim();if(!txt)return;
+  inp.value='';
+  addChatMsg('user',txt);
+  chatHistory.push({role:'user',content:txt});
+  const loading=addChatMsg('ai-loading','<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
+  try{
+    const reply=await ai(chatHistory,350);
+    chatHistory.push({role:'assistant',content:reply});
+    const formatted=reply.replace(/\(Düzeltme: ([^)]+)\)/g,'<br><span class="ai-feedback-badge">✏️ Düzeltme: $1</span>');
+    loading.className='chat-msg ai';loading.innerHTML=formatted;
+    document.getElementById('chatBox').scrollTop=9999;
+    addXP(5);earnBadge('b-chat');
+  }catch(e){loading.className='chat-msg ai';loading.textContent='⚠️ '+e.message;}
+}
+
+// ── NEWS ──
+function newsChangeLang(l,el){newsLang=l;document.querySelectorAll('.nls-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function selNewsCat(c,el){newsCat=c;document.querySelectorAll('.ncat').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+const catNames={business:'iş dünyası',tech:'teknoloji',world:'dünya',science:'bilim',sports:'spor'};
+
+async function fetchNews(){
+  const btn=document.getElementById('newsFetchBtn');
+  const area=document.getElementById('newsArea');
+  btn.disabled=true;
+  document.getElementById('newsBtnTxt').innerHTML='<span class="spin-icon">⟳</span> Yükleniyor...';
+  area.innerHTML='<div class="empty-state"><span class="empty-icon" style="font-size:36px">⏳</span><div class="empty-txt">AI haber oluşturuyor...</div></div>';
+  try{
+    const txt=await ai([{role:'user',content:`Create a realistic news article about ${catNames[newsCat]} as if from 2026. Create a ${L[newsLang].name} language lesson based on it. Reply ONLY with raw JSON, no markdown:\n{"headline":"headline in ${L[newsLang].name}","source":"Reuters or BBC or AP","summary":"3-4 sentences in ${L[newsLang].name} — wrap exactly 4 key words **like this**","vocabulary":[{"word":"","tr":"Turkish meaning"},{"word":"","tr":""},{"word":"","tr":""},{"word":"","tr":""}],"quiz_q":"comprehension question in ${L[newsLang].name}","quiz_opts":["correct answer","wrong1","wrong2","wrong3"],"difficulty":"B1"}`}],900);
+    const j=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    renderNews(j);
+  }catch(e){area.innerHTML='<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-txt">Haber yüklenemedi: '+e.message+'</div></div>';}
+  btn.disabled=false;document.getElementById('newsBtnTxt').textContent='📰 Yeni Haber Getir';
+}
+
+function renderNews(d){
+  const sum=(d.summary||'').replace(/\*\*([^*]+)\*\*/g,'<span class="news-kw">$1</span>');
+  const opts=(d.quiz_opts||[]).map((o,i)=>`<button class="nq-opt" onclick="checkNews(this,${i===0})">${o}</button>`).join('');
+  const voc=(d.vocabulary||[]).map(v=>`<div class="vocab-card"><div class="vc-word">${v.word}</div><div class="vc-tr">${v.tr}</div></div>`).join('');
+  document.getElementById('newsArea').innerHTML=`
+<div class="news-card">
+  <div class="news-card-hdr">
+    <span class="news-source">${d.source||'Uluslararası'}</span>
+    <div class="news-headline">${d.headline||''}</div>
+  </div>
+  <div class="news-body">
+    <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📖 Haber Özeti</div>
+    <div class="news-summary">${sum}</div>
+    <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📝 Anahtar Kelimeler</div>
+    <div class="vocab-cards">${voc}</div>
+    <div class="news-quiz">
+      <div style="font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">❓ Anlama Testi</div>
+      <div class="nq-q">${d.quiz_q||''}</div>
+      <div class="nq-opts">${opts}</div>
+      <div id="nqFb" style="font-size:13px;font-weight:700;margin-top:8px;min-height:16px"></div>
+    </div>
+  </div>
+</div>`;
+}
+
+function checkNews(btn,ok){
+  document.querySelectorAll('.nq-opt').forEach(b=>b.disabled=true);
+  btn.classList.add(ok?'correct':'wrong');
+  if(!ok)document.querySelectorAll('.nq-opt')[0].classList.add('correct');
+  const fb=document.getElementById('nqFb');
+  fb.style.color=ok?'var(--green)':'var(--red)';
+  fb.textContent=ok?'✓ Doğru! Harika iş! +15 XP':'✗ Yanlış — doğru cevap yeşil ile işaretlendi.';
+  if(ok)addXP(15);
+}
+
+// ── LEVEL TEST ──
+const LT_QUESTIONS=[
+  {q:'What does "Hello" mean in Turkish?',opts:['Merhaba','Hoşçakal','Teşekkürler','Hayır'],c:0,lv:0},
+  {q:'Which sentence is correct?',opts:['I am go to school.','I goes to school.','I go to school.','I going to school.'],c:2,lv:1},
+  {q:'Choose the correct past tense: "Yesterday I ___ to the store."',opts:['go','goes','going','went'],c:3,lv:1},
+  {q:'"I would rather stay at home than go out" — this sentence expresses:',opts:['Obligation','Preference','Ability','Permission'],c:1,lv:2},
+  {q:'Which is the most formal way to make a request?',opts:['Give me that!','Can you give me that?','Could you possibly give me that?','I want that.'],c:2,lv:2},
+  {q:'Fill in: "By the time she arrived, we ___ for two hours."',opts:['waited','were waiting','had been waiting','have waited'],c:2,lv:3},
+  {q:'What does "Nevertheless" mean?',opts:['Therefore','However / Despite this','Furthermore','Meanwhile'],c:1,lv:3},
+  {q:'"The report needs to be submitted" uses which structure?',opts:['Active voice','Passive infinitive','Gerund phrase','Conditional'],c:1,lv:3},
+  {q:'Which word best completes: "The negotiations were ___ after both sides agreed."',opts:['concluded','concluding','to conclude','has concluded'],c:0,lv:3},
+  {q:'"Had I known earlier, I would have acted differently" — this is a:',opts:['First conditional','Second conditional','Third conditional','Zero conditional'],c:2,lv:3},
+];
+
+function startLevelTest(){
+  ltAnswers=[];ltCurrent=0;ltScore=0;
+  document.getElementById('levelTestArea').innerHTML=renderLTQ();
+}
+
+function renderLTQ(){
+  const q=LT_QUESTIONS[ltCurrent];
+  const opts=q.opts.map((o,i)=>`<button class="lt-opt" onclick="ansLT(this,${i})">${o}</button>`).join('');
+  return `<div class="lt-question"><div class="lt-q-num">Soru ${ltCurrent+1} / ${LT_QUESTIONS.length}</div><div class="prog-wrap" style="margin-bottom:12px"><div class="prog-fill" style="width:${(ltCurrent/LT_QUESTIONS.length)*100}%"></div></div><div class="lt-q-text">${q.q}</div><div class="lt-opts">${opts}</div></div>`;
+}
+
+function ansLT(btn,chosen){
+  document.querySelectorAll('.lt-opt').forEach(b=>b.disabled=true);
+  const q=LT_QUESTIONS[ltCurrent];
+  if(chosen===q.c){btn.classList.add('correct');ltScore++;}
+  else{btn.classList.add('wrong');document.querySelectorAll('.lt-opt')[q.c].classList.add('correct');}
+  ltAnswers.push(chosen===q.c);
+  setTimeout(()=>{
+    ltCurrent++;
+    if(ltCurrent<LT_QUESTIONS.length){document.getElementById('levelTestArea').innerHTML=renderLTQ();}
+    else{showLTResult();}
+  },1200);
+}
+
+function showLTResult(){
+  const pct=ltScore/LT_QUESTIONS.length;
+  const lv=pct<.3?{l:'A1',t:'Başlangıç',s:'Temel kelimeleri öğrenmeye başlıyorsun. Harika bir başlangıç!'}:pct<.5?{l:'A2',t:'Temel',s:'Basit konuşmaları anlıyor ve yapabiliyorsun.'}:pct<.7?{l:'B1',t:'Orta',s:'Günlük konularda rahatça iletişim kurabiliyorsun!'}:{l:'B2',t:'İleri Orta',s:'Karmaşık konuları anlıyor ve ifade edebiliyorsun. Süper!'};
+  document.getElementById('levelTestArea').innerHTML=`<div class="lt-result"><div class="lt-result-level">${lv.l}</div><div class="lt-result-title">${lv.t} Seviyesi</div><div class="lt-result-sub">${ltScore}/${LT_QUESTIONS.length} doğru — ${lv.s}</div><button class="lt-start" style="margin-top:16px" onclick="startLevelTest()">Tekrar Test Et</button></div>`;
+  document.getElementById('tbLevel').textContent=lv.l;
+  addXP(30);
+}
+
+// ── PROGRESS ──
+function updateProgress(){
+  document.getElementById('sgWords').textContent=words;
+  document.getElementById('sgStreak').textContent=streak;
+  document.getElementById('sgXP').textContent=xp;
+  document.getElementById('sgAcc').textContent=total>0?Math.round((correct/total)*100)+'%':'—';
+  document.getElementById('tbXP').textContent=xp;
+  const lv=xp<100?{l:'A1',s:'Başlangıç — Her adım önemli!',n:100}:xp<300?{l:'A2',s:'Temel — İyi gidiyorsun!',n:300}:xp<600?{l:'B1',s:'Orta — Harika ilerliyorsun!',n:600}:{l:'B2',s:'İleri Orta — Muhteşemsin!',n:1000};
+  document.getElementById('lhLevel').textContent=lv.l;
+  document.getElementById('lhSub').textContent=lv.s;
+  document.getElementById('lhXPCur').textContent=xp+' XP';
+  document.getElementById('lhXPNext').textContent=lv.n+' XP → Sonraki seviye';
+  document.getElementById('lhProgFill').style.width=Math.min((xp/lv.n)*100,100)+'%';
+  document.getElementById('tbLevel').textContent=lv.l;
+}
+
+async function loadAIReport(){
+  const box=document.getElementById('aiReport');
+  box.innerHTML='<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  try{
+    const txt=await ai([{role:'user',content:`Language learning coach. Student learns ${L[lang].name}. Stats: ${words} words learned, ${xp} XP total, ${streak} day streak, ${total>0?Math.round((correct/total)*100)+'%':'no'} accuracy. Write 2-3 sentence encouraging report in Turkish + 1 specific study tip. Be warm and motivating like Duolingo. Use 1-2 emojis.`}],300);
+    box.innerHTML=txt.replace(/\n/g,'<br>');
+  }catch(e){box.textContent='⚠️ '+e.message;}
+}
+
+// ── HOME ──
+function updateHome(){
+  document.getElementById('qsWords').textContent=words;
+  document.getElementById('qsXP').textContent=xp;
+  document.getElementById('qsAcc').textContent=total>0?Math.round((correct/total)*100)+'%':'—';
+  updateHomeProgress();
+}
+function updateHomeProgress(){
+  const pct=Math.min((lessonsToday/10)*100,100);
+  document.getElementById('greetProgBar').style.width=pct+'%';
+  document.getElementById('greetProgLabel').textContent=lessonsToday+' / 10 ders tamamlandı';
+}
+
+// ── XP & BADGES ──
+function addXP(n){
+  xp+=n;
+  document.getElementById('tbXP').textContent=xp;
+  document.getElementById('qsXP').textContent=xp;
+  const p=document.getElementById('xpPop');
+  p.textContent='+'+n+' XP 🎉';p.classList.add('show');
+  setTimeout(()=>p.classList.remove('show'),1500);
+  if(xp>=100)earnBadge('b-100xp');
+}
+
+function earnBadge(id){
+  const el=document.getElementById(id);
+  if(el&&!el.classList.contains('earned')){el.classList.add('earned');}
+}
+
+function checkBadges(){
+  if(words>=1)earnBadge('b-first');
+  if(words>=10)earnBadge('b-10words');
+  if(streak>=3)earnBadge('b-streak3');
+  if(correct>0&&correct===total)earnBadge('b-perfect');
+}
+
+// ── STREAK ──
+function loadStreak(){
+  const last=localStorage.getItem('ll');
+  const today=new Date().toDateString();
+  if(last===today){streak=parseInt(localStorage.getItem('ls')||'1');}
+  else if(last===new Date(Date.now()-86400000).toDateString()){streak=parseInt(localStorage.getItem('ls')||'0')+1;}
+  else{streak=1;}
+  localStorage.setItem('ll',today);localStorage.setItem('ls',streak);
+  document.getElementById('tbStreak').textContent=streak;
+  if(streak>=3)earnBadge('b-streak3');
+}
+
+// ── INIT ──
+window.onload=function(){
+  const saved=localStorage.getItem('lk');
+  if(saved&&saved.startsWith('sk-ant')){KEY=saved;}
+  // Auto-load onboarding, don't skip
+};
+</script>
+</body>
+</html>
