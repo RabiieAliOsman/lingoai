@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>LingoAI — Dil Öğrenme Asistanı</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f0f4ff;
+  --white:#ffffff;
+  --surface:#f8faff;
+  --border:#e2e8f8;
+  --accent:#4f6ef7;
+  --accent2:#7c5cbf;
+  --green:#22c55e;
+  --red:#ef4444;
+  --amber:#f59e0b;
+  --text:#1e2a4a;
+  --text2:#64748b;
+  --text3:#94a3b8;
+  --shadow:0 2px 12px rgba(79,110,247,.10);
+  --radius:16px;
+  --radius-sm:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── SETUP SCREEN ── */
+.setup{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.setup-card{background:var(--white);border-radius:24px;padding:40px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(79,110,247,.15);text-align:center}
+.setup-logo{font-size:48px;margin-bottom:12px}
+.setup-title{font-size:28px;font-weight:800;color:var(--accent);margin-bottom:6px}
+.setup-sub{font-size:15px;color:var(--text2);margin-bottom:28px}
+.setup-label{font-size:13px;font-weight:700;color:var(--text);text-align:left;margin-bottom:8px;letter-spacing:.3px}
+.setup-input{width:100%;border:2px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);outline:none;transition:border-color .2s;margin-bottom:6px}
+.setup-input:focus{border-color:var(--accent)}
+.setup-hint{font-size:12px;color:var(--text3);text-align:left;margin-bottom:20px;line-height:1.5}
+.setup-hint a{color:var(--accent);text-decoration:none}
+.lang-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px}
+.lang-card{border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px 8px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.lang-card:hover{border-color:var(--accent);background:#f0f4ff}
+.lang-card.sel{border-color:var(--accent);background:#eef2ff}
+.lang-flag{font-size:28px;display:block;margin-bottom:4px}
+.lang-name{font-size:13px;font-weight:700;color:var(--text)}
+.start-btn{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;letter-spacing:.3px}
+.start-btn:hover{background:#3a5ce4;transform:translateY(-1px)}
+.start-btn:disabled{background:var(--border);color:var(--text3);cursor:not-allowed;transform:none}
+
+/* ── APP ── */
+.app{display:none;min-height:100vh;flex-direction:column}
+.app.show{display:flex}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:2px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.tb-logo{font-size:20px;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:8px}
+.tb-lang{font-size:22px}
+.tb-streak{display:flex;align-items:center;gap:5px;background:#fff7ed;border:2px solid #fed7aa;border-radius:99px;padding:4px 12px}
+.tb-streak-num{font-size:14px;font-weight:800;color:#ea580c}
+.tb-xp{display:flex;align-items:center;gap:5px;background:#f0fdf4;border:2px solid #bbf7d0;border-radius:99px;padding:4px 12px}
+.tb-xp-num{font-size:14px;font-weight:800;color:#16a34a}
+.tb-right{display:flex;align-items:center;gap:8px}
+
+/* BOTTOM NAV */
+.bottom-nav{background:var(--white);border-top:2px solid var(--border);display:flex;position:sticky;bottom:0;z-index:100}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px;cursor:pointer;color:var(--text3);transition:color .15s;font-size:10px;font-weight:700;gap:3px;border:none;background:transparent;font-family:'Nunito',sans-serif}
+.bn-item:hover{color:var(--accent)}
+.bn-item.active{color:var(--accent)}
+.bn-item i{font-size:22px}
+
+/* CONTENT */
+.content{flex:1;padding:20px;max-width:640px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:16px}
+
+/* PAGE */
+.page{display:none;flex-direction:column;gap:16px}
+.page.active{display:flex}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:2px solid var(--border)}
+.card-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--text2);margin-bottom:16px}
+
+/* LESSON CARD */
+.lesson-hero{background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:var(--radius);padding:24px;color:#fff;text-align:center;position:relative;overflow:hidden}
+.lesson-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.1)}
+.lesson-emoji{font-size:52px;display:block;margin-bottom:8px}
+.lesson-word{font-size:32px;font-weight:800;margin-bottom:4px}
+.lesson-phonetic{font-size:14px;opacity:.8;margin-bottom:8px}
+.lesson-tr{font-size:16px;font-weight:600;background:rgba(255,255,255,.2);border-radius:8px;padding:6px 16px;display:inline-block}
+.lesson-example{font-size:13px;opacity:.85;margin-top:10px;font-style:italic}
+
+/* OPTIONS */
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.opt-btn{padding:14px;border:2.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;background:var(--white);color:var(--text);font-family:'Nunito',sans-serif;transition:all .15s;text-align:left}
+.opt-btn:hover{border-color:var(--accent);background:#eef2ff}
+.opt-btn.correct{border-color:var(--green);background:#f0fdf4;color:var(--green)}
+.opt-btn.wrong{border-color:var(--red);background:#fef2f2;color:var(--red)}
+.opt-btn.reveal{border-color:var(--green);background:#f0fdf4;color:var(--green)}
+
+/* FEEDBACK */
+.feedback{border-radius:var(--radius-sm);padding:14px;font-size:14px;font-weight:700;text-align:center;display:none}
+.feedback.show{display:block}
+.feedback.good{background:#f0fdf4;color:var(--green);border:2px solid #bbf7d0}
+.feedback.bad{background:#fef2f2;color:var(--red);border:2px solid #fecaca}
+
+/* PROGRESS BAR */
+.prog-wrap{background:var(--border);border-radius:99px;height:10px;overflow:hidden}
+.prog-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s}
+
+/* NEXT BTN */
+.next-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius-sm);font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;display:none;transition:all .15s}
+.next-btn.show{display:block}
+.next-btn:hover{background:#16a34a;transform:translateY(-1px)}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;gap:12px;max-height:340px;overflow-y:auto;padding:4px 0}
+.chat-wrap::-webkit-scrollbar{width:3px}
+.chat-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.6}
+.chat-msg.ai{background:var(--surface);border:2px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg.user{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.correction{background:#fef9ee;border:2px solid #fde68a;color:#92400e;font-size:13px;align-self:flex-start}
+.chat-input-row{display:flex;gap:8px;margin-top:8px}
+.chat-input{flex:1;border:2px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;font-family:'Nunito',sans-serif;color:var(--text);outline:none;transition:border-color .2s}
+.chat-input:focus{border-color:var(--accent)}
+.chat-send{background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);width:42px;height:42px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.chat-send:hover{background:#3a5ce4}
+
+/* CULTURE CARDS */
+.culture-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.culture-item{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:all .15s}
+.culture-item:hover{border-color:var(--accent);background:#eef2ff}
+.culture-item.open{border-color:var(--accent);background:#eef2ff}
+.culture-flag{font-size:28px;margin-bottom:6px}
+.culture-title{font-size:13px;font-weight:800;color:var(--text)}
+.culture-body{font-size:12px;color:var(--text2);line-height:1.6;margin-top:8px;display:none}
+.culture-item.open .culture-body{display:block}
+
+/* PROGRESS PAGE */
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-box{background:var(--white);border:2px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.stat-num{font-size:28px;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:12px;color:var(--text2);font-weight:600}
+.level-badge{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:4px}
+.level-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.level-sub{font-size:13px;opacity:.85}
+
+/* LOADING */
+.loading{display:flex;gap:5px;align-items:center;padding:4px 0}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:bounce 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite}
+
+/* XP POPUP */
+.xp-popup{position:fixed;top:70px;right:16px;background:var(--green);color:#fff;border-radius:99px;padding:8px 18px;font-size:14px;font-weight:800;z-index:999;opacity:0;transform:translateY(-10px);transition:all .3s;pointer-events:none}
+.xp-popup.show{opacity:1;transform:translateY(0)}
+
+/* RESPONSIVE */
+@media(max-width:480px){
+  .options{grid-template-columns:1fr}
+  .culture-grid{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="xp-popup" id="xpPopup">+10 XP 🎉</div>
+
+<!-- ── SETUP SCREEN ── -->
+<div class="setup" id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-logo">🌍</div>
+    <div class="setup-title">LingoAI</div>
+    <div class="setup-sub">AI destekli dil öğrenme asistanı</div>
+
+    <div class="setup-label">Anthropic API Anahtarı</div>
+    <input class="setup-input" type="password" id="apiKeyInput" placeholder="sk-ant-api03-..."/>
+    <div class="setup-hint">
+      Ücretsiz anahtar için: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key<br>
+      Anahtarın sadece senin tarayıcında saklanır, hiçbir yere gönderilmez.
+    </div>
+
+    <div class="setup-label">Hangi dili öğrenmek istiyorsun?</div>
+    <div class="lang-grid">
+      <div class="lang-card sel" data-lang="en" onclick="selectLang(this)">
+        <span class="lang-flag">🇬🇧</span>
+        <div class="lang-name">İngilizce</div>
+      </div>
+      <div class="lang-card" data-lang="de" onclick="selectLang(this)">
+        <span class="lang-flag">🇩🇪</span>
+        <div class="lang-name">Almanca</div>
+      </div>
+      <div class="lang-card" data-lang="zh" onclick="selectLang(this)">
+        <span class="lang-flag">🇨🇳</span>
+        <div class="lang-name">Çince</div>
+      </div>
+    </div>
+
+    <button class="start-btn" id="startBtn" onclick="startApp()">Öğrenmeye Başla 🚀</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="tb-logo"><span id="tbLang">🇬🇧</span> LingoAI</div>
+    <div class="tb-right">
+      <div class="tb-streak">🔥 <span class="tb-streak-num" id="streakNum">0</span></div>
+      <div class="tb-xp">⭐ <span class="tb-xp-num" id="xpNum">0</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- KELIME PAGE -->
+    <div class="page active" id="page-learn">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:14px;font-weight:700;color:var(--text2)">Günlük Kelimeler</div>
+        <div style="font-size:13px;color:var(--text3)" id="lessonCounter">1 / 8</div>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:12%"></div></div>
+
+      <div class="lesson-hero" id="lessonHero">
+        <span class="lesson-emoji" id="lessonEmoji">📚</span>
+        <div class="lesson-word" id="lessonWord">Yükleniyor...</div>
+        <div class="lesson-phonetic" id="lessonPhonetic"></div>
+        <div class="lesson-tr" id="lessonTr">Türkçe karşılık</div>
+        <div class="lesson-example" id="lessonEx"></div>
+      </div>
+
+      <div class="card" style="padding:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">Doğru çeviriyi seç:</div>
+        <div class="options" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+
+      <button class="next-btn" id="nextBtn" onclick="nextLesson()">Devam Et →</button>
+    </div>
+
+    <!-- SOHBET PAGE -->
+    <div class="page" id="page-chat">
+      <div class="card">
+        <div class="card-title">💬 AI ile Konuşma Pratiği</div>
+        <div class="card-sub" id="chatScenario">Bir senaryo seçiliyor...</div>
+        <div class="chat-wrap" id="chatWrap"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" placeholder="Hedef dilde yaz..." onkeydown="if(event.key==='Enter')sendChat()"/>
+          <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+      <div class="card" style="padding:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:8px">SENARYO DEĞİŞTİR</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="startChatScenario('cafe')" style="padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);font-family:'Nunito',sans-serif">☕ Kafede</button>
+          <button onclick="startChatScenario('work')" style="padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);font-family:'Nunito',sans-serif">💼 İş toplantısı</button>
+          <button onclick="startChatScenario('travel')" style="padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);font-family:'Nunito',sans-serif">✈️ Seyahat</button>
+          <button onclick="startChatScenario('shop')" style="padding:6px 14px;border:2px solid var(--border);border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;background:var(--white);font-family:'Nunito',sans-serif">🛍️ Alışveriş</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KÜLTÜR PAGE -->
+    <div class="page" id="page-culture">
+      <div class="card">
+        <div class="card-title" id="cultureLangTitle">🇬🇧 İngilizce Kültür Notları</div>
+        <div class="card-sub">Dili daha iyi anlamak için kültürü tanı</div>
+        <div class="culture-grid" id="cultureGrid"></div>
+      </div>
+      <div class="card" id="aiCultureCard" style="display:none">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px">🤖 AI'dan Kültür Dersi</div>
+        <div id="aiCultureText" style="font-size:14px;color:var(--text2);line-height:1.7"></div>
+      </div>
+      <button onclick="askAICulture()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">✨ AI'dan Yeni Kültür Dersi Al</button>
+    </div>
+
+    <!-- İLERLEME PAGE -->
+    <div class="page" id="page-progress">
+      <div class="level-badge">
+        <div class="level-title" id="levelTitle">Başlangıç Seviyesi</div>
+        <div class="level-sub" id="levelSub">A1 — Yolun başındasın!</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-num" id="statWords">0</div><div class="stat-lbl">Öğrenilen Kelime</div></div>
+        <div class="stat-box"><div class="stat-num" id="statStreak">0</div><div class="stat-lbl">Günlük Seri 🔥</div></div>
+        <div class="stat-box"><div class="stat-num" id="statXP">0</div><div class="stat-lbl">Toplam XP ⭐</div></div>
+        <div class="stat-box"><div class="stat-num" id="statAccuracy">—</div><div class="stat-lbl">Doğruluk %</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px">XP İlerlemesi</div>
+        <div class="prog-wrap"><div class="prog-bar" id="xpProgBar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--text3)">
+          <span id="xpCurrent">0 XP</span><span id="xpNext">100 XP → A2</span>
+        </div>
+      </div>
+      <div class="card" id="aiReportCard">
+        <div style="font-size:13px;font-weight:700;color:var(--accent);margin-bottom:8px">🤖 AI Haftalık Rapor</div>
+        <div id="aiReportText" style="font-size:14px;color:var(--text2);line-height:1.7">Rapor yükleniyor...</div>
+        <button onclick="getAIReport()" style="margin-top:10px;padding:8px 16px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">🔄 Raporu Yenile</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottom-nav">
+    <button class="bn-item active" onclick="showPage('learn',this)">📚<span>Kelimeler</span></button>
+    <button class="bn-item" onclick="showPage('chat',this)">💬<span>Sohbet</span></button>
+    <button class="bn-item" onclick="showPage('culture',this)">🌍<span>Kültür</span></button>
+    <button class="bn-item" onclick="showPage('progress',this)">📊<span>İlerleme</span></button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let API_KEY = '';
+let curLang = 'en';
+let xp = 0, streak = 0, wordsLearned = 0, correct = 0, total = 0;
+let lessonIdx = 0, lessonData = [], answerGiven = false;
+let chatHistory = [];
+
+const langInfo = {
+  en: { name: 'İngilizce', flag: '🇬🇧', native: 'English' },
+  de: { name: 'Almanca', flag: '🇩🇪', native: 'Deutsch' },
+  zh: { name: 'Çince', flag: '🇨🇳', native: '中文' }
+};
+
+const cultureData = {
+  en: [
+    { flag:'🤝', title:'Selamlama', body:'İngilizler tokalaşmayı sever. "How are you?" sorusu nezaket için sorulur, gerçek bir cevap beklenmez. "Fine, thanks!" demek yeterli.' },
+    { flag:'☕', title:'Çay kültürü', body:'İngiltere\'de çay sadece içecek değil, bir ritüeldir. "Shall we have a cuppa?" — iş görüşmelerinde bile çay teklif edilir.' },
+    { flag:'🚌', title:'Sıraya girmek', body:'Sıraya girmek (queuing) İngilizler için kutsaldır. Sırayı atlamak çok büyük bir kabalık sayılır.' },
+    { flag:'😊', title:'Kibarca "hayır"', body:'"That\'s quite interesting" = Bunu beğenmedim. İngilizler doğrudan hayır demez, ince ifadeler kullanır.' },
+    { flag:'🌧️', title:'Hava durumu', body:'Hava durumu en yaygın sohbet başlangıcıdır. "Lovely weather, isn\'t it?" ile tanımadığın biriyle konuşmaya başlayabilirsin.' },
+    { flag:'🍺', title:'Pub kültürü', body:'Pub\'lar sosyal toplanma yeri. Biri sana içki aldıysa sen de ona alman beklenir — buna "round" denir.' },
+  ],
+  de: [
+    { flag:'⏰', title:'Dakiklik', body:'Almanya\'da dakik olmak zorunluluktur. "5 dakika geç kalmak" bile kabul edilemez. Erken gelmek daha iyidir.' },
+    { flag:'🤝', title:'Resmi hitap', body:'"Sie" (resmi siz) ve "du" (arkadaşça sen) ayrımı çok önemlidir. İş hayatında "Sie" kullan, izin verilmedikçe "du" deme.' },
+    { flag:'🍺', title:'Bira kültürü', body:'"Prost!" diyerek kadeh kaldırırken göz teması kurmak şarttır. Göz teması kurmazsan 7 yıl şansızlık olduğuna inanılır!' },
+    { flag:'🏠', title:'Özel alan', body:'Almanya\'da kişisel alan önemlidir. Birinin evine davet edilmeden gitmek çok ayıptır.' },
+    { flag:'♻️', title:'Çevre bilinci', body:'Geri dönüşüm Almanya\'da çok ciddiye alınır. Yanlış çöpe atmak komşularla sorun yaratabilir.' },
+    { flag:'📋', title:'Planlama', body:'Almanlar spontane kararları sevmez. "Yarın buluşalım mı?" yerine haftalar öncesinden plan yapılır.' },
+  ],
+  zh: [
+    { flag:'🥢', title:'Yemek adabı', body:'Çubukları yemeğe dikey olarak saplanmış bırakmak tabu sayılır — cenazeyi çağrıştırır. Yemeği paylaşmak dostluğun işaretidir.' },
+    { flag:'🎁', title:'Hediye kültürü', body:'Hediyeler genellikle hemen açılmaz, nazik bir jest olarak saklanır. 4 sayısı uğursuz olduğu için 4 tane hediye verme.' },
+    { flag:'🤝', title:'İlişki ağı (Guanxi)', body:'Guanxi (关系) — ilişki ağı — iş dünyasında her şeyden önce gelir. Tanıdık üzerinden yapılan işler daha kolay yürür.' },
+    { flag:'🃏', title:'Kartvizit', body:'Kartviziti iki elle ver ve al, saygıyla incele. Üzerine yazı yazmak veya cebine hemen tıkmak çok kaba sayılır.' },
+    { flag:'🔴', title:'Renk anlamları', body:'Kırmızı renk şans ve mutluluk sembolüdür. Düğünlerde, bayramlarda ve önemli olaylarda kırmızı tercih edilir.' },
+    { flag:'😶', title:'"Yüz" kavramı', body:'"Mianzi" (面子) — yüz/onur — çok önemlidir. Birini toplum önünde utandırmak veya eleştirmek ciddi bir saygısızlıktır.' },
+  ]
+};
+
+// ── SETUP ──
+function selectLang(el) {
+  document.querySelectorAll('.lang-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  curLang = el.dataset.lang;
+}
+
+function startApp() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key.startsWith('sk-ant')) {
+    alert('Geçerli bir API anahtarı gir! "sk-ant-" ile başlamalı.');
+    return;
+  }
+  API_KEY = key;
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('tbLang').textContent = langInfo[curLang].flag;
+  loadStreak();
+  loadLesson();
+  renderCulture();
+  getAIReport();
+}
+
+// ── API ──
+async function callAPI(messages, maxTokens = 800) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: maxTokens,
+      messages
+    })
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message);
+  return d.content[0].text;
+}
+
+// ── NAVIGATION ──
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'chat' && chatHistory.length === 0) startChatScenario('cafe');
+  if (id === 'progress') updateProgressPage();
+}
+
+// ── LESSON ──
+async function loadLesson() {
+  const lang = langInfo[curLang];
+  document.getElementById('lessonWord').textContent = '...';
+  document.getElementById('lessonEmoji').textContent = '⏳';
+  document.getElementById('lessonTr').textContent = 'Yükleniyor...';
+  document.getElementById('lessonPhonetic').textContent = '';
+  document.getElementById('lessonEx').textContent = '';
+  document.getElementById('options').innerHTML = '<div style="color:var(--text3);font-size:13px;text-align:center;padding:10px">Kelimeler hazırlanıyor...</div>';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('nextBtn').className = 'next-btn';
+  answerGiven = false;
+
+  try {
+    const prompt = `Create a ${lang.name} vocabulary lesson. Give me 1 word with 4 multiple choice options.
+
+Reply ONLY with this exact JSON (no markdown, no backticks):
+{"word":"${lang.native} word","phonetic":"pronunciation guide","turkish":"Turkish meaning","emoji":"relevant emoji","example":"example sentence in ${lang.native}","options":["correct Turkish meaning","wrong option 1","wrong option 2","wrong option 3"],"correct":0}
+
+Rules:
+- Word should be useful for everyday life (A1-B1 level)
+- options[0] must be the correct Turkish meaning
+- Shuffle the options so correct answer is not always first (change the "correct" index accordingly)
+- For Chinese: include pinyin in phonetic field`;
+
+    const txt = await callAPI([{ role: 'user', content: prompt }]);
+    const clean = txt.replace(/```json|```/g, '').trim();
+    const j = JSON.parse(clean);
+
+    document.getElementById('lessonEmoji').textContent = j.emoji || '📖';
+    document.getElementById('lessonWord').textContent = j.word;
+    document.getElementById('lessonPhonetic').textContent = j.phonetic || '';
+    document.getElementById('lessonTr').textContent = j.turkish;
+    document.getElementById('lessonEx').textContent = '"' + (j.example || '') + '"';
+
+    const opts = document.getElementById('options');
+    opts.innerHTML = '';
+    j.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt;
+      btn.onclick = () => checkAnswer(i, j.correct, j.options);
+      opts.appendChild(btn);
+    });
+
+    lessonIdx++;
+    document.getElementById('lessonCounter').textContent = lessonIdx + ' / ' + (lessonIdx + 3);
+    document.getElementById('progBar').style.width = Math.min((lessonIdx / 8) * 100, 100) + '%';
+
+  } catch (e) {
+    document.getElementById('lessonWord').textContent = 'Hata!';
+    document.getElementById('lessonTr').textContent = 'API anahtarını kontrol et';
+    document.getElementById('options').innerHTML = '<div style="color:var(--red);font-size:13px;text-align:center;padding:10px">Bağlantı hatası: ' + e.message + '</div>';
+  }
+}
+
+function checkAnswer(chosen, correct, options) {
+  if (answerGiven) return;
+  answerGiven = true;
+  total++;
+
+  const btns = document.querySelectorAll('.opt-btn');
+  btns[correct].classList.add('correct');
+
+  const fb = document.getElementById('feedback');
+  if (chosen === correct) {
+    btns[chosen].classList.add('correct');
+    fb.textContent = '🎉 Doğru! Harika iş!';
+    fb.className = 'feedback show good';
+    addXP(10);
+    correct++;
+    wordsLearned++;
+  } else {
+    btns[chosen].classList.add('wrong');
+    fb.textContent = '❌ Yanlış. Doğru cevap: ' + options[correct];
+    fb.className = 'feedback show bad';
+  }
+
+  document.getElementById('nextBtn').className = 'next-btn show';
+}
+
+function nextLesson() {
+  loadLesson();
+}
+
+// ── CHAT ──
+const scenarios = {
+  cafe: { tr: 'Kafede sipariş verme', prompt: 'You are a friendly barista at a coffee shop. The student will order something. Speak ONLY in {LANG}. Keep sentences short and simple (A1-B1 level). After each student message, gently correct any grammar mistakes in parentheses like (Correction: ...). Start by greeting them.' },
+  work: { tr: 'İş toplantısı', prompt: 'You are a colleague in a business meeting. Speak ONLY in {LANG}. Keep it professional but simple. After each student message, note any grammar mistakes in parentheses like (Correction: ...). Start by welcoming them to the meeting.' },
+  travel: { tr: 'Havalimanında', prompt: 'You are an airport information desk officer. The student needs help. Speak ONLY in {LANG}. Simple sentences please. After each student message, correct mistakes in parentheses. Start by asking how you can help.' },
+  shop: { tr: 'Alışveriş', prompt: 'You are a shop assistant. The student is a customer. Speak ONLY in {LANG}. Keep it simple. Correct grammar mistakes in parentheses after each response. Start by greeting the customer.' }
+};
+
+function startChatScenario(key) {
+  chatHistory = [];
+  const s = scenarios[key];
+  const lang = langInfo[curLang];
+  document.getElementById('chatScenario').textContent = '📍 ' + s.tr;
+  document.getElementById('chatWrap').innerHTML = '';
+  const sysPrompt = s.prompt.replace('{LANG}', lang.native);
+
+  addChatMsg('ai', '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
+
+  callAPI([
+    { role: 'user', content: sysPrompt + '\n\nNow start the conversation.' }
+  ], 300).then(txt => {
+    chatHistory = [
+      { role: 'user', content: sysPrompt + '\n\nNow start the conversation.' },
+      { role: 'assistant', content: txt }
+    ];
+    const wrap = document.getElementById('chatWrap');
+    wrap.lastChild.innerHTML = txt;
+    wrap.scrollTop = wrap.scrollHeight;
+  }).catch(() => {
+    document.getElementById('chatWrap').lastChild.innerHTML = 'Bağlantı hatası. API anahtarını kontrol et.';
+  });
+}
+
+function addChatMsg(role, html) {
+  const wrap = document.getElementById('chatWrap');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  div.innerHTML = html;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+
+  addChatMsg('user', txt);
+  chatHistory.push({ role: 'user', content: txt });
+
+  const loading = addChatMsg('ai', '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>');
+
+  try {
+    const reply = await callAPI(chatHistory, 400);
+    chatHistory.push({ role: 'assistant', content: reply });
+
+    // Correction highlight
+    const formatted = reply.replace(/\(Correction: ([^)]+)\)/g, '<span style="color:var(--amber);font-weight:700">✏️ $1</span>');
+    loading.innerHTML = formatted;
+    loading.scrollIntoView({ behavior: 'smooth' });
+    addXP(5);
+  } catch (e) {
+    loading.innerHTML = 'Hata: ' + e.message;
+  }
+}
+
+// ── CULTURE ──
+function renderCulture() {
+  const lang = langInfo[curLang];
+  document.getElementById('cultureLangTitle').textContent = lang.flag + ' ' + lang.name + ' Kültür Notları';
+  const data = cultureData[curLang] || [];
+  const grid = document.getElementById('cultureGrid');
+  grid.innerHTML = data.map((d, i) => `
+    <div class="culture-item" onclick="toggleCulture(this)">
+      <div class="culture-flag">${d.flag}</div>
+      <div class="culture-title">${d.title}</div>
+      <div class="culture-body">${d.body}</div>
+    </div>
+  `).join('');
+}
+
+function toggleCulture(el) {
+  el.classList.toggle('open');
+}
+
+async function askAICulture() {
+  const card = document.getElementById('aiCultureCard');
+  const txt = document.getElementById('aiCultureText');
+  card.style.display = 'block';
+  txt.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+  try {
+    const lang = langInfo[curLang];
+    const reply = await callAPI([{
+      role: 'user',
+      content: `Tell me 3 surprising and interesting cultural facts about ${lang.native}-speaking countries that would help a Turkish person understand the culture better. Write in Turkish. Use emojis. Make it fun and engaging. Format as 3 short paragraphs.`
+    }], 500);
+    txt.innerHTML = reply.replace(/\n/g, '<br>');
+  } catch (e) {
+    txt.textContent = 'Hata: ' + e.message;
+  }
+}
+
+// ── PROGRESS ──
+function updateProgressPage() {
+  document.getElementById('statWords').textContent = wordsLearned;
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statXP').textContent = xp;
+  document.getElementById('statAccuracy').textContent = total > 0 ? Math.round((correct / total) * 100) + '%' : '—';
+  document.getElementById('xpNum').textContent = xp;
+  document.getElementById('xpCurrent').textContent = xp + ' XP';
+
+  const level = xp < 100 ? { title: 'Başlangıç', sub: 'A1 — Yolun başındasın!', next: 100 }
+    : xp < 300 ? { title: 'Temel Seviye', sub: 'A2 — İyi gidiyorsun!', next: 300 }
+    : xp < 600 ? { title: 'Orta Seviye', sub: 'B1 — Harika ilerliyorsun!', next: 600 }
+    : { title: 'İleri Seviye', sub: 'B2 — Muhteşemsin!', next: 1000 };
+
+  document.getElementById('levelTitle').textContent = level.title;
+  document.getElementById('levelSub').textContent = level.sub;
+  document.getElementById('xpNext').textContent = level.next + ' XP → Sonraki seviye';
+  document.getElementById('xpProgBar').style.width = Math.min((xp / level.next) * 100, 100) + '%';
+  document.getElementById('streakNum').textContent = streak;
+}
+
+async function getAIReport() {
+  const txt = document.getElementById('aiReportText');
+  txt.innerHTML = '<div class="loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+  try {
+    const lang = langInfo[curLang];
+    const reply = await callAPI([{
+      role: 'user',
+      content: `You are a language learning coach. A student is learning ${lang.name}. They have:
+- ${wordsLearned} words learned
+- ${xp} XP points
+- ${streak} day streak
+- ${total > 0 ? Math.round((correct / total) * 100) + '%' : 'no'} accuracy rate
+
+Write a short, encouraging progress report in Turkish (3-4 sentences). Give 1 specific tip to improve. Be warm and motivating like Duolingo.`
+    }], 400);
+    txt.innerHTML = reply.replace(/\n/g, '<br>');
+  } catch (e) {
+    txt.textContent = 'Rapor alınamadı. ' + e.message;
+  }
+}
+
+// ── XP & STREAK ──
+function addXP(amount) {
+  xp += amount;
+  document.getElementById('xpNum').textContent = xp;
+  const popup = document.getElementById('xpPopup');
+  popup.textContent = '+' + amount + ' XP 🎉';
+  popup.classList.add('show');
+  setTimeout(() => popup.classList.remove('show'), 1500);
+}
+
+function loadStreak() {
+  const last = localStorage.getItem('lingo_last');
+  const today = new Date().toDateString();
+  if (last === today) {
+    streak = parseInt(localStorage.getItem('lingo_streak') || '1');
+  } else if (last === new Date(Date.now() - 86400000).toDateString()) {
+    streak = parseInt(localStorage.getItem('lingo_streak') || '0') + 1;
+  } else {
+    streak = 1;
+  }
+  localStorage.setItem('lingo_last', today);
+  localStorage.setItem('lingo_streak', streak);
+  document.getElementById('streakNum').textContent = streak;
+}
+</script>
+</body>
+</html>
