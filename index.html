@@ -288,16 +288,26 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="ob-dot" id="od3"></div>
   </div>
 
-  <!-- Step 1: API Key -->
+  <!-- Step 1: Login -->
   <div class="ob-step active" id="ob-s1">
-    <div class="ob-title">🔑 API Anahtarı</div>
-    <div class="ob-sub">Anthropic API anahtarınla AI özelliklerini etkinleştir</div>
-    <input class="ob-input" type="password" id="apiInput" placeholder="sk-ant-api03-..."/>
-    <div class="ob-hint">
-      Ücretsiz anahtar: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key<br>
-      <strong>Güvenli:</strong> Anahtarın sadece tarayıcında saklanır, hiçbir sunucuya gönderilmez.
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:48px;margin-bottom:8px">🔐</div>
+      <div class="ob-title">Giriş Yap</div>
+      <div class="ob-sub">LingoAI Pro hesabına giriş yap</div>
     </div>
-    <button class="ob-btn" onclick="ob_next(1)">Devam Et →</button>
+    <div style="margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">Kullanıcı Adı</div>
+      <input class="ob-input" type="text" id="userInput" placeholder="Kullanıcı adını gir..." autocomplete="username"/>
+    </div>
+    <div style="margin-bottom:6px">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">Şifre</div>
+      <input class="ob-input" type="password" id="passInput" placeholder="Şifreni gir..." autocomplete="current-password" onkeydown="if(event.key==='Enter')ob_next(1)"/>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:18px;line-height:1.5">
+      Demo hesap: <strong>demo</strong> / <strong>lingo123</strong>
+    </div>
+    <div id="loginError" style="font-size:13px;color:var(--red);font-weight:700;margin-bottom:10px;display:none">❌ Kullanıcı adı veya şifre yanlış!</div>
+    <button class="ob-btn" onclick="ob_next(1)">Giriş Yap →</button>
   </div>
 
   <!-- Step 2: Language -->
@@ -569,7 +579,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 
 <script>
 // ── STATE ──
-let KEY='', lang='en', userLevel='beginner';
+const HARDCODED_KEY='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';
+const USERS={
+  'demo':    {pass:'lingo123', name:'Demo Kullanıcı'},
+  'rabiie':  {pass:'lingo2024', name:'Rabiie'},
+  'ogrenci': {pass:'123456',   name:'Öğrenci'},
+};
+let KEY=HARDCODED_KEY, lang='en', userLevel='beginner', userName='';
 let xp=0, streak=1, words=0, correct=0, total=0;
 let lessonIdx=0, answered=false, hearts=3, lessonsToday=0;
 let chatHistory=[], chatLang='en', newsLang='en', newsCat='business';
@@ -632,9 +648,17 @@ const SCENARIOS={
 let obStep=1;
 function ob_next(from){
   if(from===1){
-    const k=document.getElementById('apiInput').value.trim();
-    if(!k.startsWith('sk-ant')){alert('Geçerli API anahtarı gir! "sk-ant-" ile başlamalı.');return;}
-    KEY=k;localStorage.setItem('lk',k);
+    const u=document.getElementById('userInput').value.trim().toLowerCase();
+    const p=document.getElementById('passInput').value;
+    const errEl=document.getElementById('loginError');
+    if(!USERS[u]||USERS[u].pass!==p){
+      errEl.style.display='block';
+      document.getElementById('passInput').value='';
+      return;
+    }
+    errEl.style.display='none';
+    userName=USERS[u].name;
+    document.getElementById('greetName').textContent=userName+' için hoş geldin! 👋';
   }
   document.getElementById('ob-s'+from).classList.remove('active');
   obStep++;
@@ -995,9 +1019,7 @@ function loadStreak(){
 
 // ── INIT ──
 window.onload=function(){
-  const saved=localStorage.getItem('lk');
-  if(saved&&saved.startsWith('sk-ant')){KEY=saved;}
-  // Auto-load onboarding, don't skip
+  // Her zaman login ekranını göster
 };
 </script>
 </body>
